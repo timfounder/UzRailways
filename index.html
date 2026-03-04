@@ -6,933 +6,280 @@
     <title>🚂 УзЖД Монитор</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: rgba(17, 24, 39, 0.7);
-            --bg-glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --accent-primary: #06b6d4;
-            --accent-secondary: #8b5cf6;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --shadow-glow: 0 0 60px rgba(6, 182, 212, 0.15);
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --bg: #0a0e17; --bg-card: rgba(17,24,39,0.7); --bg-glass: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08); --accent: #06b6d4; --accent2: #8b5cf6;
+            --err: #ef4444; --grad: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            --t1: #f1f5f9; --t2: #94a3b8; --t3: #64748b;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--t1); min-height: 100vh; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+        .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .bg::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(ellipse at 20% 20%, rgba(6,182,212,0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 50%);
+            animation: bg 20s ease-in-out infinite;
         }
+        @keyframes bg { 0%,100%{transform:translate(0) scale(1)} 50%{transform:translate(-2%,-2%) scale(1.02)} }
 
-        html, body {
-            height: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            font-family: 'Outfit', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* Animated background */
-        .bg-pattern {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .bg-pattern::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
-            animation: bgPulse 20s ease-in-out infinite;
-        }
-
-        .train-tracks {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: repeating-linear-gradient(
-                90deg,
-                var(--border-glass) 0px,
-                var(--border-glass) 30px,
-                transparent 30px,
-                transparent 50px
-            );
-            opacity: 0.3;
-        }
-
-        .moving-train {
-            position: absolute;
-            bottom: 20px;
-            font-size: 24px;
-            animation: trainMove 15s linear infinite;
-            opacity: 0.2;
-        }
-
-        @keyframes trainMove {
-            0% { left: -50px; }
-            100% { left: calc(100% + 50px); }
-        }
-
-        @keyframes bgPulse {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(-2%, -2%) scale(1.02); }
-            66% { transform: translate(2%, 2%) scale(0.98); }
-        }
-
-        /* Container */
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 440px;
-            margin: 0 auto;
-            padding: 20px 16px 100px;
-            min-height: 100vh;
-        }
+        .wrap { position: relative; z-index: 1; max-width: 440px; margin: 0 auto; padding: 16px 16px 32px; }
 
         /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
-            animation: slideDown 0.6s ease-out;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .logo-icon {
-            width: 56px;
-            height: 56px;
-            background: var(--accent-gradient);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            box-shadow: var(--shadow-glow);
-            animation: pulse 3s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: var(--shadow-glow); }
-            50% { box-shadow: 0 0 80px rgba(6, 182, 212, 0.25); }
-        }
-
-        .logo-text {
-            text-align: left;
-        }
-
-        .logo-title {
-            font-size: 22px;
-            font-weight: 700;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .logo-subtitle {
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        .header-desc {
-            color: var(--text-muted);
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        .hdr { text-align: center; margin-bottom: 24px; animation: sDown .6s ease-out; }
+        @keyframes sDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        .logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .logo-ico { width: 48px; height: 48px; background: var(--grad); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            box-shadow: 0 0 60px rgba(6,182,212,.15); }
+        .logo-t { font-size: 20px; font-weight: 700; background: var(--grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-s { font-size: 12px; color: var(--t2); }
+        .hdr-d { color: var(--t3); font-size: 13px; }
 
         /* Card */
-        .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-card);
-            animation: cardSlide 0.5s ease-out backwards;
-        }
+        .card { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); animation: cUp .5s ease-out backwards; }
+        .card:nth-child(2){animation-delay:.1s} .card:nth-child(3){animation-delay:.2s}
+        @keyframes cUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
-        .card:nth-child(2) { animation-delay: 0.1s; }
-        .card:nth-child(3) { animation-delay: 0.2s; }
-        .card:nth-child(4) { animation-delay: 0.3s; }
+        .c-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .c-ico { width: 40px; height: 40px; background: var(--bg-glass); border: 1px solid var(--border);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .c-title { font-size: 15px; font-weight: 600; }
+        .c-sub { font-size: 11px; color: var(--t3); }
 
-        @keyframes cardSlide {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* Popular routes */
+        .pop-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pop-btn { flex: 1 1 calc(50% - 4px); min-width: 140px;
+            padding: 12px; background: var(--bg-glass); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--t2); font-family: 'Outfit'; font-size: 13px;
+            cursor: pointer; transition: all .2s; text-align: center; font-weight: 500; }
+        .pop-btn:hover, .pop-btn:active { border-color: var(--accent); color: var(--t1);
+            background: rgba(6,182,212,.08); }
+        .pop-btn .pop-arrow { color: var(--accent); font-size: 11px; }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+        /* Form */
+        .fg { margin-bottom: 14px; }
+        .fl { display: block; font-size: 12px; font-weight: 500; color: var(--t2); margin-bottom: 6px; }
+        .sel-w { position: relative; }
+        .sel-w::after { content:'\25BC'; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+            font-size:9px; color:var(--t3); pointer-events:none; }
+        select, input[type="date"] { width: 100%; padding: 12px 14px; background: var(--bg-glass);
+            border: 1px solid var(--border); border-radius: 12px; color: var(--t1);
+            font-family: 'Outfit'; font-size: 14px; appearance: none; transition: all .3s; }
+        select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,.1); }
+        select.err { border-color: var(--err); }
+        select option { background: #111827; color: var(--t1); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1) opacity(.5); cursor:pointer; }
 
-        .card-icon {
-            width: 44px;
-            height: 44px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
+        .err-msg { display:none; font-size:11px; color:var(--err); margin-top:4px; }
+        .err-msg.vis { display:block; }
 
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+        /* Route preview */
+        .rp { display:none; align-items:center; gap:10px; padding:12px; margin-top:12px;
+            background:var(--bg-glass); border:1px solid var(--border); border-radius:12px; }
+        .rp.vis { display:flex; animation: cUp .3s ease-out; }
+        .rp-st { flex:1; text-align:center; }
+        .rp-l { font-size:9px; color:var(--t3); text-transform:uppercase; letter-spacing:1px; }
+        .rp-n { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .rp-arr { color:var(--accent); font-size:16px; }
 
-        .card-subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        /* Swap */
+        .swap { width:36px; height:36px; background:var(--bg-glass); border:1px solid var(--border);
+            border-radius:50%; color:var(--accent); font-size:16px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; margin:-2px auto 10px;
+            transition:all .3s; }
+        .swap:hover { background:rgba(6,182,212,.1); transform:rotate(180deg); }
 
-        /* Form elements */
-        .form-group {
-            margin-bottom: 16px;
-        }
+        /* Info */
+        .info { display:flex; align-items:flex-start; gap:10px; padding:12px; margin-top:12px;
+            background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.2); border-radius:12px; }
+        .info-ico { font-size:16px; flex-shrink:0; }
+        .info-txt { font-size:12px; color:var(--t2); line-height:1.4; }
 
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
+        /* Submit */
+        .sub { width:100%; padding:16px; background:var(--grad); border:none; border-radius:14px;
+            color:#fff; font-family:'Outfit'; font-size:15px; font-weight:600; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            box-shadow:0 10px 40px rgba(6,182,212,.3); position:relative; overflow:hidden;
+            transition:all .3s; }
+        .sub:hover { transform:translateY(-2px); box-shadow:0 15px 50px rgba(6,182,212,.4); }
+        .sub:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+        .sub.ld .bt { opacity:0; }
+        .sub.ld .sp { display:block; }
+        .sp { display:none; position:absolute; width:22px; height:22px; border:3px solid rgba(255,255,255,.3);
+            border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
 
-        .select-wrapper {
-            position: relative;
-        }
-
-        .select-wrapper::after {
-            content: '▼';
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 10px;
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
-        select, input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 15px;
-            appearance: none;
-            -webkit-appearance: none;
-            transition: all 0.3s ease;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
-        }
-
-        select option {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 12px;
-        }
-
-        input[type="date"] {
-            padding-right: 16px;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1) opacity(0.5);
-            cursor: pointer;
-        }
-
-        /* Route display */
-        .route-display {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            background: var(--bg-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            margin-top: 16px;
-        }
-
-        .route-station {
-            flex: 1;
-            text-align: center;
-        }
-
-        .route-station-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .route-station-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .route-arrow {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--accent-primary);
-        }
-
-        .route-arrow-line {
-            width: 40px;
-            height: 2px;
-            background: var(--accent-gradient);
-            border-radius: 1px;
-            position: relative;
-        }
-
-        .route-arrow-line::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 4px solid transparent;
-            border-left: 6px solid var(--accent-secondary);
-        }
-
-        .route-arrow-icon {
-            font-size: 16px;
-            animation: trainBounce 1.5s ease-in-out infinite;
-        }
-
-        @keyframes trainBounce {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(4px); }
-        }
-
-        /* Wagon class buttons */
-        .wagon-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .wagon-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px;
-            background: var(--bg-glass);
-            border: 2px solid var(--border-glass);
-            border-radius: 14px;
-            color: var(--text-secondary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .wagon-btn:hover {
-            border-color: rgba(6, 182, 212, 0.3);
-            background: rgba(6, 182, 212, 0.05);
-        }
-
-        .wagon-btn.active {
-            border-color: var(--accent-primary);
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--text-primary);
-        }
-
-        .wagon-btn-icon {
-            font-size: 18px;
-        }
-
-        .wagon-btn-all {
-            grid-column: span 2;
-        }
-
-        /* Submit button */
-        .submit-btn {
-            width: 100%;
-            padding: 18px 24px;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-family: 'Outfit', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: 0.5s;
-        }
-
-        .submit-btn:hover::before {
-            left: 100%;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 50px rgba(6, 182, 212, 0.4);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .submit-btn.loading .btn-text {
-            opacity: 0;
-        }
-
-        .submit-btn.loading .spinner {
-            display: block;
-        }
-
-        .spinner {
-            display: none;
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Info banner */
-        .info-banner {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px;
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 14px;
-            margin-top: 16px;
-        }
-
-        .info-banner-icon {
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .info-banner-text {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* Success state */
-        .success-state {
-            display: none;
-            text-align: center;
-            padding: 40px 20px;
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        .success-state.active {
-            display: block;
-        }
-
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .success-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 2px solid var(--accent-success);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            margin: 0 auto 24px;
-            animation: successPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes successPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-        }
-
-        .success-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--accent-success);
-        }
-
-        .success-text {
-            color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        /* Form state */
-        .form-state {
-            display: block;
-        }
-
-        .form-state.hidden {
-            display: none;
-        }
-
-        /* Responsive */
-        @media (max-width: 360px) {
-            .container {
-                padding: 16px 12px 100px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-
-            .wagon-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .wagon-btn-all {
-                grid-column: span 1;
-            }
-        }
+        @media(max-width:360px) { .wrap{padding:12px 12px 24px} .card{padding:16px} .pop-btn{min-width:120px} }
     </style>
 </head>
 <body>
-    <div class="bg-pattern">
-        <div class="train-tracks"></div>
-        <div class="moving-train">🚂</div>
-    </div>
-
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
+    <div class="bg"></div>
+    <div class="wrap">
+        <header class="hdr">
             <div class="logo">
-                <div class="logo-icon">🚂</div>
-                <div class="logo-text">
-                    <div class="logo-title">УзЖД Монитор</div>
-                    <div class="logo-subtitle">Билет кузатув тизими</div>
-                </div>
+                <div class="logo-ico">🚂</div>
+                <div><div class="logo-t">УзЖД Монитор</div><div class="logo-s">Рейс қидириш</div></div>
             </div>
-            <p class="header-desc">
-                Билет пайдо бўлганда дарҳол хабар оласиз
-            </p>
+            <p class="hdr-d">Йўналиш ва сана танланг</p>
         </header>
 
-        <!-- Form -->
-        <div class="form-state" id="formState">
-            <!-- Route Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">🚉</div>
-                    <div>
-                        <div class="card-title">Йўналишни танланг</div>
-                        <div class="card-subtitle">Қайердан қаёққа кетасиз?</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Қайердан</label>
-                    <div class="select-wrapper">
-                        <select id="fromStation" required>
-                            <option value="">Станцияни танланг...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Қаёққа</label>
-                    <div class="select-wrapper">
-                        <select id="toStation" required>
-                            <option value="">Станцияни танланг...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="route-display" id="routeDisplay" style="display: none;">
-                    <div class="route-station">
-                        <div class="route-station-label">Кетиш</div>
-                        <div class="route-station-name" id="routeFrom">-</div>
-                    </div>
-                    <div class="route-arrow">
-                        <div class="route-arrow-icon">🚂</div>
-                        <div class="route-arrow-line"></div>
-                    </div>
-                    <div class="route-station">
-                        <div class="route-station-label">Келиш</div>
-                        <div class="route-station-name" id="routeTo">-</div>
-                    </div>
-                </div>
+        <!-- Popular routes -->
+        <div class="card">
+            <div class="c-hdr">
+                <div class="c-ico">⚡</div>
+                <div><div class="c-title">Машҳур йўналишлар</div><div class="c-sub">Бир босишда</div></div>
             </div>
-
-            <!-- Date Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">📅</div>
-                    <div>
-                        <div class="card-title">Сана</div>
-                        <div class="card-subtitle">Қачон кетмоқчисиз?</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Сафар санаси</label>
-                    <input type="date" id="travelDate" required>
-                </div>
-
-                <div class="info-banner">
-                    <span class="info-banner-icon">💡</span>
-                    <span class="info-banner-text">
-                        Билетлар сафардан 45 кун олдин сотувга чиқарилади
-                    </span>
-                </div>
-            </div>
-
-            <!-- Wagon Class Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">🎫</div>
-                    <div>
-                        <div class="card-title">Вагон класси</div>
-                        <div class="card-subtitle">Қайси классни кузатамиз?</div>
-                    </div>
-                </div>
-
-                <div class="wagon-grid">
-                    <button type="button" class="wagon-btn wagon-btn-all active" data-class="all">
-                        <span class="wagon-btn-icon">🎫</span>
-                        <span>Барча класслар</span>
-                    </button>
-                    <button type="button" class="wagon-btn" data-class="СВ">
-                        <span class="wagon-btn-icon">👑</span>
-                        <span>СВ (Люкс)</span>
-                    </button>
-                    <button type="button" class="wagon-btn" data-class="К">
-                        <span class="wagon-btn-icon">🛏️</span>
-                        <span>Купе</span>
-                    </button>
-                    <button type="button" class="wagon-btn" data-class="П">
-                        <span class="wagon-btn-icon">🛋️</span>
-                        <span>Плацкарт</span>
-                    </button>
-                    <button type="button" class="wagon-btn" data-class="О">
-                        <span class="wagon-btn-icon">💺</span>
-                        <span>Сидячий</span>
-                    </button>
-                    <button type="button" class="wagon-btn" data-class="Э">
-                        <span class="wagon-btn-icon">💼</span>
-                        <span>Эконом</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="button" class="submit-btn" id="submitBtn">
-                <span class="spinner"></span>
-                <span class="btn-text">🔔 Мониторингни бошлаш</span>
-            </button>
+            <div class="pop-grid" id="popGrid"></div>
         </div>
 
-        <!-- Success State -->
-        <div class="success-state" id="successState">
-            <div class="card">
-                <div class="success-icon">✅</div>
-                <h2 class="success-title">Мониторинг ишга тушди!</h2>
-                <p class="success-text">
-                    Билет пайдо бўлганда сизга дарҳол хабар юборамиз.
-                    <br><br>
-                    Мониторларингизни кўриш учун ботга қайтинг.
-                </p>
+        <!-- Route -->
+        <div class="card">
+            <div class="c-hdr">
+                <div class="c-ico">🚉</div>
+                <div><div class="c-title">Йўналиш</div><div class="c-sub">Ёки ўзингиз танланг</div></div>
+            </div>
+            <div class="fg">
+                <label class="fl">Қайердан</label>
+                <div class="sel-w"><select id="from"><option value="">Танланг...</option></select></div>
+            </div>
+            <button type="button" class="swap" id="swap">⇅</button>
+            <div class="fg">
+                <label class="fl">Қаёққа</label>
+                <div class="sel-w"><select id="to"><option value="">Танланг...</option></select></div>
+                <div class="err-msg" id="sameErr">⚠ Бир хил станция</div>
+            </div>
+            <div class="rp" id="rp">
+                <div class="rp-st"><div class="rp-l">Кетиш</div><div class="rp-n" id="rpF">-</div></div>
+                <div class="rp-arr">🚂 →</div>
+                <div class="rp-st"><div class="rp-l">Келиш</div><div class="rp-n" id="rpT">-</div></div>
             </div>
         </div>
+
+        <!-- Date -->
+        <div class="card">
+            <div class="c-hdr">
+                <div class="c-ico">📅</div>
+                <div><div class="c-title">Сана</div><div class="c-sub">Қачон?</div></div>
+            </div>
+            <div class="fg">
+                <label class="fl">Сафар санаси</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="info">
+                <span class="info-ico">💡</span>
+                <span class="info-txt">Билетлар 45 кун олдин сотувга чиқади</span>
+            </div>
+        </div>
+
+        <button type="button" class="sub" id="sub" disabled>
+            <span class="sp"></span>
+            <span class="bt">🔍 Рейсларни кўрсатиш</span>
+        </button>
     </div>
 
     <script>
-        // Станции
-        const STATIONS = {
-            "2900000": "Тошкент",
-            "2900001": "Тошкент-Южный",
-            "2900680": "Даштобод",
-            "2900790": "Самарқанд", 
-            "2900930": "Бухоро",
-            "2900970": "Хива",
-            "2900950": "Урганч",
-            "2900800": "Қарши",
-            "2900850": "Термиз",
-            "2900700": "Навоий",
-            "2900600": "Жиззах",
-            "2900400": "Фарғона",
-            "2900450": "Андижон",
-            "2900500": "Наманган",
-            "2900300": "Қўқон",
-            "2900100": "Гулистон",
-            "2900980": "Нукус",
-            "2900960": "Кунград"
+        const ST = {
+            "2900000":"Тошкент","2900001":"Тошкент-Жанубий","2900790":"Самарқанд",
+            "2900930":"Бухоро","2900970":"Хива","2900950":"Урганч","2900800":"Қарши",
+            "2900850":"Термиз","2900700":"Навоий","2900600":"Жиззах","2900400":"Фарғона",
+            "2900450":"Андижон","2900500":"Наманган","2900300":"Қўқон","2900100":"Гулистон",
+            "2900980":"Нукус","2900960":"Кунград","2900660":"Даштобод","2900782":"Зарафшон",
+            "2900200":"Сирдарё","2900750":"Каттақўрғон","2900820":"Шаҳрисабз"
         };
+        const POP = [
+            ["2900000","2900790"], ["2900790","2900000"],
+            ["2900000","2900930"], ["2900000","2900970"],
+            ["2900000","2900400"], ["2900000","2900500"],
+        ];
 
-        // Elements
-        const fromStation = document.getElementById('fromStation');
-        const toStation = document.getElementById('toStation');
-        const travelDate = document.getElementById('travelDate');
-        const submitBtn = document.getElementById('submitBtn');
-        const routeDisplay = document.getElementById('routeDisplay');
-        const routeFrom = document.getElementById('routeFrom');
-        const routeTo = document.getElementById('routeTo');
-        const formState = document.getElementById('formState');
-        const successState = document.getElementById('successState');
-        const wagonBtns = document.querySelectorAll('.wagon-btn');
+        const $=id=>document.getElementById(id);
+        const fr=$('from'), to=$('to'), dt=$('date'), sub=$('sub'),
+              sameErr=$('sameErr'), rp=$('rp'), rpF=$('rpF'), rpT=$('rpT');
 
-        let selectedWagonClass = 'all';
+        const tg=window.Telegram?.WebApp;
+        if(tg){tg.ready();tg.expand();tg.BackButton.show();tg.BackButton.onClick(()=>tg.close());}
+        const hap=()=>{try{tg?.HapticFeedback?.selectionChanged()}catch{}};
 
-        // Telegram WebApp
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            tg.enableClosingConfirmation();
-        }
-
-        // Populate stations
-        function populateStations() {
-            const sortedStations = Object.entries(STATIONS).sort((a, b) => 
-                a[1].localeCompare(b[1], 'uz')
-            );
-
-            sortedStations.forEach(([code, name]) => {
-                fromStation.add(new Option(name, code));
-                toStation.add(new Option(name, code));
-            });
-        }
-
-        // Set date limits
-        function setDateLimits() {
-            const today = new Date();
-            const minDate = new Date(today);
-            minDate.setDate(minDate.getDate() + 1);
-            
-            const maxDate = new Date(today);
-            maxDate.setDate(maxDate.getDate() + 45);
-
-            travelDate.min = minDate.toISOString().split('T')[0];
-            travelDate.max = maxDate.toISOString().split('T')[0];
-            travelDate.value = minDate.toISOString().split('T')[0];
-        }
-
-        // Update route display
-        function updateRouteDisplay() {
-            const from = fromStation.options[fromStation.selectedIndex]?.text;
-            const to = toStation.options[toStation.selectedIndex]?.text;
-
-            if (fromStation.value && toStation.value) {
-                routeFrom.textContent = from;
-                routeTo.textContent = to;
-                routeDisplay.style.display = 'flex';
-                
-                // Add animation
-                routeDisplay.style.animation = 'none';
-                routeDisplay.offsetHeight;
-                routeDisplay.style.animation = 'cardSlide 0.3s ease-out';
-            } else {
-                routeDisplay.style.display = 'none';
-            }
-        }
-
-        // Wagon class selection
-        wagonBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                wagonBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedWagonClass = btn.dataset.class;
-                
-                // Haptic feedback
-                if (tg?.HapticFeedback) {
-                    tg.HapticFeedback.selectionChanged();
-                }
-            });
-        });
-
-        // Validate form
-        function validateForm() {
-            const isValid = fromStation.value && 
-                           toStation.value && 
-                           travelDate.value &&
-                           fromStation.value !== toStation.value;
-            
-            submitBtn.disabled = !isValid;
-            return isValid;
-        }
-
-        // Submit handler
-        async function handleSubmit() {
-            if (!validateForm()) {
-                if (tg?.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-                return;
-            }
-
-            // Show loading
-            submitBtn.classList.add('loading');
-            submitBtn.disabled = true;
-
-            // Prepare data
-            const data = {
-                from_station: fromStation.value,
-                from_station_name: fromStation.options[fromStation.selectedIndex].text,
-                to_station: toStation.value,
-                to_station_name: toStation.options[toStation.selectedIndex].text,
-                date: travelDate.value,
-                wagon_class: selectedWagonClass
+        // Popular routes
+        const pg=$('popGrid');
+        POP.forEach(([f,t])=>{
+            const btn=document.createElement('button');
+            btn.className='pop-btn';
+            btn.innerHTML=`${ST[f]} <span class="pop-arrow">→</span> ${ST[t]}`;
+            btn.onclick=()=>{
+                fr.value=f; to.value=t; updRoute(); validate(); hap();
+                // Scroll to date
+                dt.scrollIntoView({behavior:'smooth',block:'center'});
+                dt.focus();
             };
+            pg.appendChild(btn);
+        });
 
-            // Send to Telegram
-            if (tg) {
-                try {
-                    tg.sendData(JSON.stringify(data));
-                    
-                    // Show success
-                    setTimeout(() => {
-                        formState.classList.add('hidden');
-                        successState.classList.add('active');
-                        
-                        if (tg.HapticFeedback) {
-                            tg.HapticFeedback.notificationOccurred('success');
-                        }
-                        
-                        // Close after delay
-                        setTimeout(() => {
-                            tg.close();
-                        }, 2000);
-                    }, 500);
-                } catch (error) {
-                    console.error('Error sending data:', error);
-                    submitBtn.classList.remove('loading');
-                    submitBtn.disabled = false;
-                }
-            } else {
-                // Demo mode (without Telegram)
-                console.log('Monitor data:', data);
-                
-                setTimeout(() => {
-                    formState.classList.add('hidden');
-                    successState.classList.add('active');
-                    submitBtn.classList.remove('loading');
-                }, 1000);
-            }
+        // Stations
+        const sorted=Object.entries(ST).sort((a,b)=>a[1].localeCompare(b[1],'uz'));
+        sorted.forEach(([c,n])=>{fr.add(new Option(n,c));to.add(new Option(n,c));});
+
+        // Date
+        const today=new Date();
+        const minD=new Date(today);minD.setDate(minD.getDate()+1);
+        const maxD=new Date(today);maxD.setDate(maxD.getDate()+45);
+        const fmt=d=>d.toISOString().split('T')[0];
+        dt.min=fmt(minD);dt.max=fmt(maxD);dt.value=fmt(minD);
+
+        function updRoute(){
+            if(fr.value&&to.value&&fr.value!==to.value){
+                rpF.textContent=fr.options[fr.selectedIndex].text;
+                rpT.textContent=to.options[to.selectedIndex].text;
+                rp.classList.add('vis');
+            }else{rp.classList.remove('vis');}
+        }
+        function validate(){
+            const same=fr.value&&to.value&&fr.value===to.value;
+            sameErr.classList.toggle('vis',same);
+            to.classList.toggle('err',same);
+            const ok=fr.value&&to.value&&dt.value&&!same;
+            sub.disabled=!ok;
+            return ok;
         }
 
-        // Event listeners
-        fromStation.addEventListener('change', () => {
-            updateRouteDisplay();
-            validateForm();
+        $('swap').addEventListener('click',()=>{
+            const tmp=fr.value;fr.value=to.value;to.value=tmp;
+            updRoute();validate();hap();
+        });
+        fr.addEventListener('change',()=>{updRoute();validate();hap();});
+        to.addEventListener('change',()=>{updRoute();validate();hap();});
+        dt.addEventListener('change',validate);
+
+        sub.addEventListener('click',()=>{
+            if(!validate())return;
+            const data={
+                from_station:fr.value,
+                from_station_name:fr.options[fr.selectedIndex].text,
+                to_station:to.value,
+                to_station_name:to.options[to.selectedIndex].text,
+                date:dt.value,
+            };
+            if(tg){
+                sub.classList.add('ld');sub.disabled=true;
+                try{tg.HapticFeedback?.notificationOccurred('success');}catch{}
+                tg.sendData(JSON.stringify(data));
+            }else{
+                console.log(data);
+                sub.classList.add('ld');
+                setTimeout(()=>{sub.classList.remove('ld');alert(JSON.stringify(data,null,2));},800);
+            }
         });
 
-        toStation.addEventListener('change', () => {
-            updateRouteDisplay();
-            validateForm();
-        });
-
-        travelDate.addEventListener('change', validateForm);
-
-        submitBtn.addEventListener('click', handleSubmit);
-
-        // Initialize
-        populateStations();
-        setDateLimits();
-        validateForm();
-
-        // Focus effects with sound simulation through haptic
-        [fromStation, toStation, travelDate].forEach(el => {
-            el.addEventListener('focus', () => {
-                if (tg?.HapticFeedback) {
-                    tg.HapticFeedback.selectionChanged();
-                }
-            });
-        });
+        validate();
     </script>
 </body>
 </html>
